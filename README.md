@@ -12,7 +12,7 @@ In this demo, we extended the original implementation of RouteNet to support dif
  
 All the datasets used in this paper are available [here](https://github.com/knowledgedefinednetworking/NetworkModelingDatasets/tree/master/datasets_v0), where we provide a detailed description on how to process the data.
  
-Moreover, we provide a RouteNet model already trained (in the [models_trained directory](models_trained)) that can be directly loaded to make delay predictions on any sample from our datasets. In particular, this model was trained over 480,000 training samples: 240,000 from the 14-nodes NSF network topology and 240,000 from a 50-node network topology (see mode details in the description of our [datasets](https://github.com/knowledgedefinednetworking/NetworkModelingDatasets/tree/master/datasets_v0)).
+Moreover, we provide a RouteNet model already trained (in the [models_trained directory](trained_models)) that can be directly loaded to make delay predictions on any sample from our datasets. In particular, this model was trained over 480,000 training samples: 240,000 from the 14-nodes NSF network topology and 240,000 from a 50-node network topology (see mode details in the description of our [datasets](https://github.com/knowledgedefinednetworking/NetworkModelingDatasets/tree/master/datasets_v0)).
  
  
 ## Running RouteNet 
