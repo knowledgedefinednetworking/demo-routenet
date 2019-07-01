@@ -505,7 +505,7 @@ def data(args):
                 print("Tar file with wrong format")
                 exit()
 
-            delay_file = tar.extractfile(dir_info.name + "/delayGlobal.txt")
+            delay_file = tar.extractfile(dir_info.name + "/simulationResults.txt")
             routing_file = tar.extractfile(dir_info.name + "/Routing.txt")
 
             tf.logging.info('Starting ', delay_file)
