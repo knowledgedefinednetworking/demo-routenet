@@ -12,7 +12,7 @@ import configparser
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Netwrok routing ML tool')
+    parser = argparse.ArgumentParser(description='Normalization values')
     parser.add_argument("--dir", help="Directories", nargs='+')
     parser.add_argument("--ini", help="Config file")
 
