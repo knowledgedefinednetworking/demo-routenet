@@ -8,7 +8,7 @@ Today, network operators still lack functional network models able to make accur
 <!-- Add BibTex citation to paper -->
  
 ## Description
-In this demo, we extended the original implementation of RouteNet to support different link capacities. All the code we use in the demo is in the [Code directory](code).
+In this demo, we extended the original implementation of RouteNet to support different link capacities. All the code we use in the demo is in the [Code directory](Code).
  
 All the datasets used in this paper are available [here](https://github.com/knowledgedefinednetworking/NetworkModelingDatasets/tree/master/datasets_v0), where we provide a detailed description on how to process the data.
  
