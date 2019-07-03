@@ -1,4 +1,4 @@
-model_checkpoint_path: "model.ckpt-264198"
+model_checkpoint_path: "model.ckpt-2260380"
 all_model_checkpoint_paths: "model.ckpt-256808"
 all_model_checkpoint_paths: "model.ckpt-258632"
 all_model_checkpoint_paths: "model.ckpt-260380"
