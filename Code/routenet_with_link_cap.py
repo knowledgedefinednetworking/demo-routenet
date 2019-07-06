@@ -489,7 +489,7 @@ def data(args):
     ned_file = ""
     if nodes_dir=="geant2bw":
         ned_file = directory+"Network_geant2bw.ned"
-    elif nodes_dir=="synth50bw2":
+    elif nodes_dir=="synth50bw":
         ned_file = directory+"Network_synth50bw.ned"
     elif nodes_dir=="nsfnetbw":
         ned_file = directory+"Network_nsfnetbw.ned"
