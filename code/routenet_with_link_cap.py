@@ -86,8 +86,6 @@ def parse(serialized, target='delay'):
                     features[k] = (features[k] - 0.37) / 0.54
                 if k == 'traffic':
                     features[k] = (features[k] - 0.17) / 0.13
-                if k == 'jitter':
-                    features[k] = (features[k] - 1.5) / 1.5
                 if k == 'link_capacity':
                     features[k] = (features[k] - 25.0) / 40.0
 
@@ -533,20 +531,6 @@ def data(args):
     for file in evaluate_samples:
         file_name = file.split('/')[-1]
         os.rename(file, tfr_eval + file_name)
-
-def predict(args):
-    tf.logging.set_verbosity('INFO')
-
-    if args.hparams:
-        hparams.parse(args.hparams)
-
-    estimator = tf.estimator.Estimator(
-        model_fn=model_fn,
-        model_dir=args.model_dir,
-        params=hparams
-    )
-
-    print(estimator.evaluate(lambda: tfrecord_input_fn(args.predict, hparams, shuffle_buf=None, target=args.target), steps=args.eval_steps))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='RouteNet: a Graph Neural Network model for computer network modeling')
