@@ -1,5 +1,6 @@
 # Challenging the generalization capabilities of Graph Neural Networks for network modeling
-### Demo paper
+#### Demo paper in ACM SIGCOMM Posters and Demos 2019, Beijin, China.
+#### Link to paper: [[here](https://dl.acm.org/citation.cfm?id=3342327)]
 #### J. Suárez-Varela, S. Carol-Bosch, K. Rusek, P. Almasan, M. Arias, P. Barlet-Ros, A. Cabellos-Aparicio.
  
 ## Abstract
