@@ -40,7 +40,7 @@ pip install -r requirements.txt
 
 This command installs all the dependencies needed to execute RouteNet.
 
-To train and evaluate RouteNet it is necessary to download some datasets from the [dataset repository](https://github.com/knowledgedefinednetworking/NetworkModelingDatasets/tree/master/datasets_v0). In this repository you can find three datasets with samples simulated with a custom packet-level simulator in three different topologies: NSFNET (2GB), GEANT2 (6GB)
+To train and evaluate RouteNet it is necessary to download some datasets from the [dataset repository](https://github.com/knowledgedefinednetworking/NetworkModelingDatasets/tree/master/datasets_v0). In this repository you can find three datasets with samples simulated with a packet-level simulator (OMNet++) in three different topologies: NSFNET (2GB), GEANT2 (6GB)
 and synthetic 50 nodes (28.7GB) topologies. To download and decompress the three datasets you can use the following commands:
 
 ```
@@ -54,7 +54,7 @@ tar -xvzf synth50.tar.gz
 
 Note that it is not necessary to download the three datasets to start to play with RouteNet. For instance, you can start using only the NSFNET dataset. 
 
-Then, you may use the script [routenet_with_link_cap.py](code/routenet_with_link_cap.py) to train a RouteNet model that predicts the per-source/destination delay. In order to train RouteNet it is necessary to convert the datasets to the 'TFRecords' format of TensorFlow. Our datasets provide directly the TFRecords files that we used to train and evaluate RouteNet (in the subdirectories 'tfrecords/train' and 'tfrecords/evaluate') in the demo. So, if you only want to reproduce the experiments of our demo you can skip this step. Otherwise, you can generate the TFrecords files running the following commands correspondingly for the three different datasets we provide:
+Then, you may use the script [run_routenet.sh](code/run_routenet.sh) to train a RouteNet model that predicts the per-source/destination delay. In order to train RouteNet it is necessary to convert the datasets to the 'TFRecords' format of TensorFlow. Our datasets provide directly the TFRecords files that we used to train and evaluate RouteNet (in the subdirectories 'tfrecords/train' and 'tfrecords/evaluate') in the demo. So, if you only want to reproduce the experiments of our demo you can skip this step. Otherwise, you can generate new TFrecords files running the following commands correspondingly for the three different datasets we provide:
 
 ```
 ./run_routenet.sh tfrecords nsfnetbw
