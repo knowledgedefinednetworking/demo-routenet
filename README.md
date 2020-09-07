@@ -54,16 +54,14 @@ tar -xvzf synth50.tar.gz
 
 Note that it is not necessary to download the three datasets to start to play with RouteNet. For instance, you can start using only the NSFNET dataset. 
 
-Then, you may use the script [routenet_with_link_cap.py](code/routenet_with_link_cap.py) to train a RouteNet model that predicts the per-source/destination delay. First of all, it is necessary to modify the variable 'path_to_datasets' to point to the path where the datasets were stored. This script assumes that all the datasets are stored in a same directory.
-
-In order to train RouteNet it is necessary to convert the datasets to the 'TFRecords' format of TensorFlow. Our datasets provide directly the TFRecords files that we used to train and evaluate RouteNet (in the subdirectories 'tfrecords/train' and 'tfrecords/evaluate').
-However, you can also run the following commands to generate the TFRecords files correspondingly for the three different datasets:
+Then, you may use the script [routenet_with_link_cap.py](code/routenet_with_link_cap.py) to train a RouteNet model that predicts the per-source/destination delay. In order to train RouteNet it is necessary to convert the datasets to the 'TFRecords' format of TensorFlow. Our datasets provide directly the TFRecords files that we used to train and evaluate RouteNet (in the subdirectories 'tfrecords/train' and 'tfrecords/evaluate') in the demo. So, if you only want to reproduce the experiments of our demo you can skip this step. Otherwise, you can generate the TFrecords files running the following commands correspondingly for the three different datasets we provide:
 
 ```
 ./run_routenet.sh tfrecords nsfnetbw
 ./run_routenet.sh tfrecords geant2bw
 ./run_routenet.sh tfrecords synth50bw
 ```
+
 
 Now, everything is ready to train a RouteNet model. For instance, you can use the following command to train a model using samples just from one topology:
 
