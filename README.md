@@ -52,7 +52,14 @@ tar -xvzf geant2.tar.gz
 tar -xvzf synth50.tar.gz
 ```
 
-Note that it is not necessary to download the three datasets to start to play with RouteNet. For instance, you can start using only the NSFNET dataset. 
+Note that it is not necessary to download the three datasets to start to play with RouteNet. For instance, you can start using only the NSFNET dataset. Once you have downloaded the datasets, the next step is to create a Linux environment Global variable that points to the directory where you downloaded the datasets. For example, if the 'wget' command was executed in the directory '/home/Downloads/datasets', the Global variable can be defined as follows:
+
+```
+PATH_TO_DATASET='/home/Downloads/datasets'
+export PATH_TO_DATASET
+```
+
+:warning: **An incorrect definition of the environment variable PATH_TO_DATASET will lead to execution errors**: Make sure it points to the proper directory!
 
 Then, you may use the script [run_routenet.sh](code/run_routenet.sh) to train a RouteNet model that predicts the per-source/destination delay. In order to train RouteNet it is necessary to convert the datasets to the 'TFRecords' format of TensorFlow. Our datasets provide directly the TFRecords files that we used to train and evaluate RouteNet (in the subdirectories 'tfrecords/train' and 'tfrecords/evaluate') in the demo. So, if you only want to reproduce the experiments of our demo you can skip this step. Otherwise, you can generate new TFrecords files running the following commands correspondingly for the three different datasets we provide:
 
