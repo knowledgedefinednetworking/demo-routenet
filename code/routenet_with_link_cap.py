@@ -32,15 +32,15 @@ def genPath ( R, s, d, connections ) :
 
 def pairwise ( iterable ) :
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-    a, b = it.tee(iterable)
+    a, b = it.tee(iterable)  # tee는 반복 객체를 복사함. 즉, a,b는 같은 값을 가지는 반복객체
     next(b, None)
     return zip(a, b)
 
 
+# 라우팅 정보가 들어있는 파일을 읽고, 값만 리턴
 def load_routing ( routing_file ) :
     R = pd.read_csv(routing_file, header = None, index_col = False)
-    # Todo : routeing file의 0번째 라인에 있는 값은 뭐지?
-    R = R.drop([R.shape[0]], axis = 1) # axis = 0 : 가로로 자름, 1 : 세로로 자름 --> R.sahpe[0]이 있는 컬럼을 모두 삭제
+    R = R.drop([R.shape[0]], axis = 1)  # 어떤 라인을 삭제하는 거지?? TODO
     return R.values
 
 
@@ -73,11 +73,7 @@ def parse ( serialized, target='delay' ) :
     '''
     Target is the name of predicted variable
     '''
-    # 사용할 디바이스 지정
     with tf.device("/cpu:0") :
-        # name scope를 지정한다, 여기서는 parse로 지정함
-        # name_scope를 지정한 with구문 안에서 지정한 값들은
-        # parse/OO 으로 부를 수 있다
         with tf.name_scope('parse') :
             features = tf.parse_single_example(
                 serialized,
@@ -136,9 +132,11 @@ def transformation_func ( it, batch_size=32 ) :
 
 
 def tfrecord_input_fn ( filenames, hparams, shuffle_buf=1000, target='delay' ) :
+    # 파일에서 데이터를 읽어와서 랜덤하게 섞기
     files = tf.data.Dataset.from_tensor_slices(filenames)
     files = files.shuffle(len(filenames))
 
+    #
     ds = files.apply(tf.contrib.data.parallel_interleave(
         tf.data.TFRecordDataset, cycle_length = 4))
 
@@ -155,15 +153,15 @@ def tfrecord_input_fn ( filenames, hparams, shuffle_buf=1000, target='delay' ) :
     return sample
 
 
+# https://www.tensorflow.org/api_docs/python/tf/keras/layers/Layer
 class ComnetModel(tf.keras.Model) :
     def __init__ ( self, hparams, output_units=1, final_activation=None ) :
         super(ComnetModel, self).__init__()
         self.hparams = hparams
-
+        # GRUCell : RNN Cell
         self.edge_update = tf.keras.layers.GRUCell(hparams.link_state_dim)
         self.path_update = tf.keras.layers.GRUCell(hparams.path_state_dim)
 
-        # 출력층 레이어 만들기
         self.readout = tf.keras.models.Sequential()
 
         self.readout.add(keras.layers.Dense(hparams.readout_units,
@@ -179,6 +177,8 @@ class ComnetModel(tf.keras.Model) :
                                             kernel_regularizer = tf.contrib.layers.l2_regularizer(hparams.l2_2),
                                             activation = final_activation))
 
+    # tf.keras.layers.Layer의 build를 override
+    # layer의 상태 생성이 필요할 때 사용
     def build ( self, input_shape=None ) :
         del input_shape
         self.edge_update.build(tf.TensorShape([None, self.hparams.path_state_dim]))
@@ -186,7 +186,12 @@ class ComnetModel(tf.keras.Model) :
         self.readout.build(input_shape = [None, self.hparams.path_state_dim])
         self.built = True
 
-    def call ( self, inputs, training=False ) :  # TODO : need to analysis this function
+    # tf.keras.layers.Layer의 call을 override
+    def call ( self, inputs, training=False ) :
+        '''
+        : inputs  	Input tensor, or list/tuple of input tensors.
+        : returns A tensor or list/tuple of tensors.
+        '''
         f_ = inputs
         shape = tf.stack([f_['n_links'], self.hparams.link_state_dim - 1], axis = 0)
         link_state = tf.concat([
@@ -204,7 +209,6 @@ class ComnetModel(tf.keras.Model) :
         seqs = f_['sequences']
 
         for _ in range(self.hparams.T) :
-
             h_tild = tf.gather(link_state, links)
 
             ids = tf.stack([paths, seqs], axis = 1)
@@ -214,7 +218,6 @@ class ComnetModel(tf.keras.Model) :
                                        segment_ids = paths)
 
             link_inputs = tf.scatter_nd(ids, h_tild, shape)
-            # path_state is a tensor of shape[batch size, shell state size]
             outputs, path_state = tf.nn.dynamic_rnn(self.path_update,
                                                     link_inputs,
                                                     sequence_length = lens,
@@ -280,7 +283,6 @@ def model_fn (
             }
         )
 
-    # a
     assert mode == tf.estimator.ModeKeys.TRAIN
 
     trainables = model.variables
@@ -290,7 +292,10 @@ def model_fn (
     summaries = [tf.summary.histogram(var.op.name, var) for var in trainables]
     summaries += [tf.summary.histogram(g.op.name, g) for g in grads if g is not None]
 
-    # Applies exponential decay to the learning rate
+    # exponential decay(지수적 감쇠)
+    # return : decayed learning rate
+    # decay_steps 82000 :
+    # decay_rate 0.8 :
     decayed_lr = tf.train.exponential_decay(params.learning_rate,
                                             tf.train.get_global_step(), 82000,
                                             0.8, staircase = True)
@@ -329,40 +334,42 @@ def train ( args ) :
     tf.logging.set_verbosity('INFO')
 
     if args.hparams :
+        # hparams를 입력으로 받은 데이터로 업데이트, 멤버함수
         hparams.parse(args.hparams)
 
+    # This class specifies the configurations for an Estimator run
     my_checkpointing_config = tf.estimator.RunConfig(
         save_checkpoints_secs = 10 * 60,  # Save checkpoints every 10 minutes
         keep_checkpoint_max = 20  # Retain the 10 most recent checkpoints.
     )
 
     estimator = tf.estimator.Estimator(
-        model_fn = model_fn,
+        model_fn = model_fn, # type : tf.estimator.ExsimatorSpec, TODO
         model_dir = args.model_dir,
         params = hparams,
         warm_start_from = args.warm,
         config = my_checkpointing_config
     )
 
-    # tf.estimator.train_and_evaluate()를 하기 위한 사전 설정 : train
     train_spec = tf.estimator.TrainSpec(
         input_fn = lambda : tfrecord_input_fn(args.train, hparams, shuffle_buf = args.shuffle_buf,
-                                              target = args.target), max_steps = args.train_steps)
-    # tf.estimator.train_and_evaluate()를 하기 위한 사전 설정 : eval
+                                              target = args.target),
+        max_steps = args.train_steps)
     eval_spec = tf.estimator.EvalSpec(
         input_fn = lambda : tfrecord_input_fn(args.eval_, hparams, shuffle_buf = None, target = args.target),
         throttle_secs = 10 * 60)
 
-    # training and evaluate 결과를 튜플 형태로 리턴
+    # estimator를 학습시키고 평가한다
     tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 
 def extract_links ( n, connections, link_cap ) :
-    A = np.zeros((n, n))
+    A = np.zeros((n, n)) # n x n matrix that is filled zero
 
     for a, c in zip(A, connections) :
         a[c] = 1
 
+    # numpy array에서 그래프를 생성
     G = nx.from_numpy_array(A, create_using = nx.DiGraph())
     edges = list(G.edges)
     capacities_links = []
@@ -391,27 +398,34 @@ def make_paths ( R, connections, link_cap ) :
     return paths, capacities_links
 
 
+# TODO : this class is very important
 class NewParser :
     netSize = 0
     offsetDelay = 0
     hasPacketGen = True
 
     def __init__ ( self, netSize ) :
+        # src_node * n = netSize ??
         self.netSize = netSize
         self.offsetDelay = netSize * netSize * 3
 
+    # bandwidth : 1st of datasets_v0
     def getBwPtr ( self, src, dst ) :
         return ((src * self.netSize + dst) * 3)
 
+    # absolute number of packets : 2nd of datasets_v0
     def getGenPcktPtr ( self, src, dst ) :
         return ((src * self.netSize + dst) * 3 + 1)
 
+    # dropped packet : 3rd of datasets_v0
     def getDropPcktPtr ( self, src, dst ) :
         return ((src * self.netSize + dst) * 3 + 2)
 
+    # delay : 4th of datasets_v0
     def getDelayPtr ( self, src, dst ) :
         return (self.offsetDelay + (src * self.netSize + dst) * 7)
 
+    # jitter : 10th of datasets_v0
     def getJitterPtr ( self, src, dst ) :
         return (self.offsetDelay + (src * self.netSize + dst) * 7 + 6)
 
@@ -420,6 +434,7 @@ def ned2lists ( fname ) :
     channels = []
     link_cap = { }
     with open(fname) as f :
+        # 정규식으로 노드 사이의 채널 속도를 가져온다
         p = re.compile(r'\s+node(\d+).port\[(\d+)\]\s+<-->\s+Channel(\d+)kbps+\s<-->\s+node(\d+).port\[(\d+)\]')
         for line in f :
             m = p.match(line)
@@ -446,6 +461,8 @@ def ned2lists ( fname ) :
     return connections, n, link_cap
 
 
+# NewParser(posParser) 객체를 업데이트
+# n x n 행렬을 만들고 데이터를 넣는다
 def get_corresponding_values ( posParser, line, n, bws, delays, jitters ) :
     bws.fill(0)
     delays.fill(0)
@@ -460,9 +477,10 @@ def get_corresponding_values ( posParser, line, n, bws, delays, jitters ) :
                 bws[it] = float(line[traffic])
                 delays[it] = float(line[delay])
                 jitters[it] = float(line[jitter])
-                it = it + 1
+                it += 1
 
 
+# *.ned 파일을 이용해서 tfrecord를 만든다
 def make_tfrecord2 ( directory, tf_file, ned_file, routing_file, data_file ) :
     con, n, link_cap = ned2lists(ned_file)
     posParser = NewParser(n)
@@ -472,9 +490,9 @@ def make_tfrecord2 ( directory, tf_file, ned_file, routing_file, data_file ) :
 
     n_paths = len(paths)
     n_links = max(max(paths)) + 1
-    a = np.zeros(n_paths)
-    d = np.zeros(n_paths)
-    j = np.zeros(n_paths)
+    a = np.zeros(n_paths) # 각 경로의 bandwidth
+    d = np.zeros(n_paths) # 각 경로의 delay
+    j = np.zeros(n_paths) # 각 경로의 jitter
 
     tfrecords_dir = directory + "tfrecords/"
 
@@ -484,6 +502,7 @@ def make_tfrecord2 ( directory, tf_file, ned_file, routing_file, data_file ) :
     link_indices, path_indices, sequ_indices = make_indices(paths)
     n_total = len(path_indices)
 
+    # write 객체 호출, tfrecord 형태로 만든 데이터를 파일로 출력하기 위한 객체
     writer = tf.python_io.TFRecordWriter(tfrecords_dir + tf_file)
 
     for line in data_file :
@@ -504,10 +523,12 @@ def make_tfrecord2 ( directory, tf_file, ned_file, routing_file, data_file ) :
         }
         ))
 
+        # tf.train.Example 데이터를 이진문자열로 직렬화
         writer.write(example.SerializeToString())
     writer.close()
 
 
+# Omnet++의 network topology 데이터 가져옴
 def data ( args ) :
     directory = args.d[0]
     nodes_dir = directory.split('/')[-1]
@@ -537,7 +558,7 @@ def data ( args ) :
             routing_file = tar.extractfile(dir_info.name + "/Routing.txt")
 
             tf.logging.info('Starting ', delay_file)
-            make_tfrecord2(directory, tf_file, ned_file, routing_file, delay_file)
+            make_tfrecord2(directory, tf_file, ned_file, routing_file, delay_file) # 실질적으로 데이터를 불러오고 준비함
 
     directory_tfr = directory + "tfrecords/"
 
@@ -548,12 +569,14 @@ def data ( args ) :
 
     if not os.path.exists(tfr_eval) :
         os.makedirs(tfr_eval)
-
+    # glob : 인자로 받은 패턴과 이름이 일치하는 모든 file/directory 리스트를 반환
     tfrecords = glob.glob(directory_tfr + '*.tfrecords')
+    # training and evalutate set 준비
     training = len(tfrecords) * 0.8
-    train_samples = random.sample(tfrecords, int(training))
-    evaluate_samples = list(set(tfrecords) - set(train_samples))
+    train_samples = random.sample(tfrecords, int(training))  # random.sample : iterable한 객체에서 수만큼 샘플을 뽑아낸다
+    evaluate_samples = list(set(tfrecords) - set(train_samples))  # train data로 뽑아낸 것을 evaluate data로
 
+    # 나눈 데이터를 RE-name
     for file in train_samples :
         file_name = file.split('/')[-1]
         os.rename(file, tfr_train + file_name)
@@ -574,6 +597,7 @@ if __name__ == '__main__' :
 
     parser_train = subparsers.add_parser('train', help = 'Train options')
     parser_train.add_argument('--hparams', type = str, help = 'Comma separated list of "name=value" pairs.')
+    # nargs : 1개 이상의 데이터를 받는다는 뜻, sh파일에서 *.tfrecord 로, 경로내의 모든 tfrecord파일을 부르고 있음
     parser_train.add_argument('--train', help = 'Train Tfrecords files', type = str, nargs = '+')
     parser_train.add_argument('--eval_', help = 'Evaluation Tfrecords files', type = str, nargs = '+')
     parser_train.add_argument('--model_dir', help = 'Model directory', type = str)
@@ -586,4 +610,4 @@ if __name__ == '__main__' :
     parser_train.set_defaults(name = "Train")
 
     args = parser.parse_args()
-    args.func(args)
+    args.func(args) # execute data or train function in this line
