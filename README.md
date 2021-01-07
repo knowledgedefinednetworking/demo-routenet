@@ -2,7 +2,10 @@
 #### Demo paper in ACM SIGCOMM Posters and Demos 2019, Beijin, China.
 #### Link to paper: [[here](https://dl.acm.org/citation.cfm?id=3342327)]
 #### J. Suárez-Varela, S. Carol-Bosch, K. Rusek, P. Almasan, M. Arias, P. Barlet-Ros, A. Cabellos-Aparicio.
- 
+#### Contact mailing list: kdn-users@knowledgedefinednetworking.org
+(You first need to subscribe at: https://mail.knowledgedefinednetworking.org/cgi-bin/mailman/listinfo/kdn-users).
+
+
 ## Abstract
 Today, network operators still lack functional network models able to make accurate predictions of end-to-end Key Performance Indicators (e.g., delay or jitter) at limited cost. Recently, a novel Graph Neural Network (GNN) model called RouteNet was proposed as a cost-effective alternative to estimate the per-source/destination pair mean delay and jitter in networks. Thanks to its GNN architecture that operates over graph-structured data, RouteNet revealed an unprecedented ability to learn and model the complex relationships among topology, routing and input traffic in networks. As a result, it was able to make performance predictions with similar accuracy than resource-hungry packet-level simulators even in network scenarios unseen during training. In this demo, we challenge the generalization capabilities of RouteNet with more complex scenarios, including larger topologies.
  
